@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SearchIcon, ArrowRightIcon, HistoryIcon, TrashIcon } from './Icons';
 import { AppState } from '../types';
@@ -8,9 +9,29 @@ interface SearchInputProps {
   appState: AppState;
   history: string[];
   onClearHistory: () => void;
+  // Model Config
+  searchModel: string;
+  onSearchModelChange: (model: string) => void;
+  analyzeModel: string;
+  onAnalyzeModelChange: (model: string) => void;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({ onSearch, isLoading, appState, history, onClearHistory }) => {
+const AVAILABLE_MODELS = [
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+  { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
+];
+
+const SearchInput: React.FC<SearchInputProps> = ({ 
+  onSearch, 
+  isLoading, 
+  appState, 
+  history, 
+  onClearHistory,
+  searchModel,
+  onSearchModelChange,
+  analyzeModel,
+  onAnalyzeModelChange
+}) => {
   const [topic, setTopic] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -92,10 +113,33 @@ const SearchInput: React.FC<SearchInputProps> = ({ onSearch, isLoading, appState
       )}
       
       {!isCompact && (
-        <div className="mt-12 flex justify-center gap-4 text-sm text-slate-500">
-           <span className="px-3 py-1 bg-slate-800/30 rounded-full border border-slate-800/50">Gemini 2.5 Flash</span>
-           <span className="px-3 py-1 bg-slate-800/30 rounded-full border border-slate-800/50">Google Search Grounding</span>
-           <span className="px-3 py-1 bg-slate-800/30 rounded-full border border-slate-800/50">Gemini 3 Pro Analysis</span>
+        <div className="mt-12 flex flex-col md:flex-row justify-center gap-6 text-sm text-slate-500">
+           {/* Model Selection UI */}
+           <div className="flex items-center gap-2 bg-slate-800/30 p-2 rounded-lg border border-slate-800/50">
+              <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider ml-2">搜尋模型</span>
+              <select 
+                value={searchModel}
+                onChange={(e) => onSearchModelChange(e.target.value)}
+                className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-md px-2 py-1 outline-none focus:border-blue-500"
+              >
+                {AVAILABLE_MODELS.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+           </div>
+
+           <div className="flex items-center gap-2 bg-slate-800/30 p-2 rounded-lg border border-slate-800/50">
+              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider ml-2">分析模型</span>
+              <select 
+                value={analyzeModel}
+                onChange={(e) => onAnalyzeModelChange(e.target.value)}
+                className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-md px-2 py-1 outline-none focus:border-emerald-500"
+              >
+                {AVAILABLE_MODELS.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+           </div>
         </div>
       )}
     </div>

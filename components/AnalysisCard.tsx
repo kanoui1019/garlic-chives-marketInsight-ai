@@ -7,6 +7,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 interface AnalysisCardProps {
   data: AnalysisData;
   isLoading: boolean;
+  modelUsed: string;
 }
 
 const LOADING_MESSAGES = [
@@ -17,7 +18,7 @@ const LOADING_MESSAGES = [
   "生成策略建議報告..."
 ];
 
-const AnalysisCard: React.FC<AnalysisCardProps> = ({ data, isLoading }) => {
+const AnalysisCard: React.FC<AnalysisCardProps> = ({ data, isLoading, modelUsed }) => {
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -62,12 +63,18 @@ MA20: ${data.technicalAnalysis.ma20} | MA60: ${data.technicalAnalysis.ma60}
 `;
     }
 
-    const textToCopy = `MarketInsight AI 分析報告\n\n${financials}\n${technicals}\n[策略分析]\n${data.content}`;
+    const textToCopy = `MarketInsight AI 分析報告 (${modelUsed})\n\n${financials}\n${technicals}\n[策略分析]\n${data.content}`;
 
     navigator.clipboard.writeText(textToCopy).then(() => {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
     });
+  };
+
+  const getModelDisplayName = (id: string) => {
+      if (id.includes('flash')) return 'GEMINI 2.5 FLASH';
+      if (id.includes('pro')) return 'GEMINI 3 PRO';
+      return id.toUpperCase();
   };
 
   if (isLoading) {
@@ -81,7 +88,9 @@ MA20: ${data.technicalAnalysis.ma20} | MA60: ${data.technicalAnalysis.ma60}
             <h3 className="text-xl font-semibold text-white mb-2 transition-all duration-500 ease-in-out">
                 {LOADING_MESSAGES[loadingMsgIndex]}
             </h3>
-            <p className="text-slate-400">Gemini 3 Pro 正在驗證市場數據...</p>
+            <p className="text-slate-400">
+                {getModelDisplayName(modelUsed)} 正在驗證市場數據...
+            </p>
         </div>
       </div>
     );
@@ -266,7 +275,7 @@ MA20: ${data.technicalAnalysis.ma20} | MA60: ${data.technicalAnalysis.ma60}
                   )}
                </button>
                <span className="text-xs font-mono text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded bg-emerald-500/5 hidden sm:inline-block">
-                   GEMINI 3 PRO PREVIEW
+                   {getModelDisplayName(modelUsed)}
                </span>
            </div>
         </div>

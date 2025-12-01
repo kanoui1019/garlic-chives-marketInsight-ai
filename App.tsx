@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppState, NewsData, AnalysisData } from './types';
 import { searchIndustryNews, analyzeProspects } from './services/geminiService';
@@ -16,6 +17,10 @@ const App: React.FC = () => {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  
+  // Model Configuration State
+  const [searchModel, setSearchModel] = useState<string>('gemini-2.5-flash');
+  const [analyzeModel, setAnalyzeModel] = useState<string>('gemini-3-pro-preview');
   
   // API Key State
   const [apiKey, setApiKey] = useState<string>('');
@@ -76,13 +81,13 @@ const App: React.FC = () => {
     saveToHistory(topic);
 
     try {
-      // Step 1: Search News
-      const news = await searchIndustryNews(topic, apiKey);
+      // Step 1: Search News using selected search model
+      const news = await searchIndustryNews(topic, apiKey, searchModel);
       setNewsData(news);
       
-      // Step 2: Analyze
+      // Step 2: Analyze using selected analysis model
       setAppState(AppState.ANALYZING);
-      const analysis = await analyzeProspects(topic, news.summary, apiKey);
+      const analysis = await analyzeProspects(topic, news.summary, apiKey, analyzeModel);
       setAnalysisData(analysis);
       
       setAppState(AppState.COMPLETED);
@@ -155,6 +160,11 @@ const App: React.FC = () => {
             appState={appState}
             history={searchHistory}
             onClearHistory={clearHistory}
+            // Model Props
+            searchModel={searchModel}
+            onSearchModelChange={setSearchModel}
+            analyzeModel={analyzeModel}
+            onAnalyzeModelChange={setAnalyzeModel}
           />
 
           {errorMsg && (
@@ -177,7 +187,8 @@ const App: React.FC = () => {
                    <section>
                      <AnalysisCard 
                         data={analysisData || { content: '' }} 
-                        isLoading={appState === AppState.ANALYZING} 
+                        isLoading={appState === AppState.ANALYZING}
+                        modelUsed={analyzeModel}
                      />
                    </section>
                 )}

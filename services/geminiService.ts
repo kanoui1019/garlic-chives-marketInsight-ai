@@ -2,13 +2,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { NewsData, AnalysisData, Source } from "../types";
 
+// Helper to clean Markdown code blocks from JSON string
+const cleanJsonString = (text: string): string => {
+  if (!text) return "{}";
+  let clean = text.replace(/```json\n?/g, '').replace(/```/g, '');
+  return clean.trim();
+};
+
 /**
- * Step 1: Search for real-time news using Gemini 2.5 Flash with Google Search Grounding.
+ * Step 1: Search for real-time news using the selected Gemini model with Google Search Grounding.
  */
-export const searchIndustryNews = async (topic: string, apiKey: string): Promise<NewsData> => {
+export const searchIndustryNews = async (topic: string, apiKey: string, modelId: string = 'gemini-2.5-flash'): Promise<NewsData> => {
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const model = 'gemini-2.5-flash';
+    
     // Prompt updated to verify accuracy, look for broker reports AND Technical Indicators
     const prompt = `
       Find the latest and most significant news, financial reports, and market trends regarding "${topic}".
@@ -34,7 +41,7 @@ export const searchIndustryNews = async (topic: string, apiKey: string): Promise
     `;
 
     const response = await ai.models.generateContent({
-      model: model,
+      model: modelId,
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
@@ -66,17 +73,17 @@ export const searchIndustryNews = async (topic: string, apiKey: string): Promise
 
   } catch (error) {
     console.error("Error fetching news:", error);
-    throw new Error("無法搜尋產業新聞，請確認 API Key 是否正確或稍後再試。");
+    throw new Error(`無法搜尋產業新聞 (${modelId})，請確認 API Key 是否正確或稍後再試。`);
   }
 };
 
 /**
- * Step 2: Analyze the gathered news using Gemini 3 Pro for verified financial modeling and technical analysis.
+ * Step 2: Analyze the gathered news using the selected Gemini model for verified financial modeling and technical analysis.
  */
-export const analyzeProspects = async (topic: string, newsSummary: string, apiKey: string): Promise<AnalysisData> => {
+export const analyzeProspects = async (topic: string, newsSummary: string, apiKey: string, modelId: string = 'gemini-3-pro-preview'): Promise<AnalysisData> => {
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const model = 'gemini-3-pro-preview'; // Switched to Gemini 3 Pro for deeper analysis
+    
     const prompt = `
       扮演一位極度嚴謹的華爾街高級金融分析師與技術分析專家 (CMT)。
       
@@ -110,7 +117,7 @@ export const analyzeProspects = async (topic: string, newsSummary: string, apiKe
     `;
 
     const response = await ai.models.generateContent({
-      model: model,
+      model: modelId,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -152,7 +159,8 @@ export const analyzeProspects = async (topic: string, newsSummary: string, apiKe
       },
     });
 
-    const json = JSON.parse(response.text);
+    const cleanText = cleanJsonString(response.text || "{}");
+    const json = JSON.parse(cleanText);
 
     return {
       content: json.analysisContent || "無法產生分析報告。",
@@ -162,6 +170,6 @@ export const analyzeProspects = async (topic: string, newsSummary: string, apiKe
 
   } catch (error) {
     console.error("Error analyzing prospects:", error);
-    throw new Error("無法產生策略分析，請稍後再試。");
+    throw new Error(`無法產生策略分析 (${modelId})，請稍後再試。`);
   }
 };
