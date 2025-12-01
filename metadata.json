@@ -1,0 +1,5 @@
+{
+  "name": "MarketInsight AI",
+  "description": "Real-time industry and stock market analysis using Gemini 2.5 Flash for grounded search and Gemini 3 Pro for deep strategic forecasting.",
+  "requestFramePermissions": []
+}
